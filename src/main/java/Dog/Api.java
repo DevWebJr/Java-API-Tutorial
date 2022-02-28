@@ -23,6 +23,7 @@ public class Api extends AbstractVerticle{
         Router router = Router.router(vertx);
         // Implémenter l'instance Body handler
         router.route("/api/v1/dogs*").handler(BodyHandler.create());
+
         // Déterminer les différentes routes
         // La route pour récupérer tous les objets
         router.get("/api/v1/dogs")
@@ -33,6 +34,9 @@ public class Api extends AbstractVerticle{
         // La route pour ajouter un objet
         router.post("/api/v1/dogs")
                 .handler(this::createOneDog);
+        // La route pour mettre à jour un objet
+        router.put("/api/v1/dogs/:id")
+                .handler(this::updateOneDog);
 
         // Lancer le serveur
         vertx.createHttpServer()
@@ -103,5 +107,25 @@ public class Api extends AbstractVerticle{
                 .setStatusCode(201)
                 .putHeader("content-type", "application/json")
                 .end(Json.encode(createdDog));
+    }
+
+    // Mettre à jour un objet
+    public void updateOneDog(RoutingContext routingContext) {
+        LOGGER.info("Dans la fonction updateOneDog");
+        // Récupérer le paramètre id de la requête pour identifier l'objet
+        final String id = routingContext.request().getParam("id");
+        // Récupérer les paramètres de l'objet depuis le body
+        final JsonObject body = routingContext.getBodyAsJson();
+        final String name = body.getString("name");
+        final String race = body.getString("race");
+        final Integer age = body.getInteger("age");
+        // Mettre à jour un objet
+        final Dog dog = new Dog(id, name, race, age);
+        final Dog updatedDog = dogService.update(dog);
+        // Envoyer la réponse
+        routingContext.response()
+                .setStatusCode(200)
+                .putHeader("content-type", "application/json")
+                .end(Json.encode(updatedDog));
     }
 }
