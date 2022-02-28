@@ -37,6 +37,9 @@ public class Api extends AbstractVerticle{
         // La route pour mettre à jour un objet
         router.put("/api/v1/dogs/:id")
                 .handler(this::updateOneDog);
+        // La route pour supprimer un objet
+        router.delete("/api/v1/dogs/:id")
+                .handler(this::deleteOneDog);
 
         // Lancer le serveur
         vertx.createHttpServer()
@@ -127,5 +130,21 @@ public class Api extends AbstractVerticle{
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
                 .end(Json.encode(updatedDog));
+    }
+
+    // Supprimer un objet
+    public void deleteOneDog(RoutingContext routingContext) {
+        LOGGER.info("Dans la fonction deleteOneDog...");
+        // Récupérer le paramètre id de la requête pour identifier l'objet
+        final String id = routingContext.request().getParam("id");
+
+        // Supprimer l'objet selectionné
+        dogService.remove(id);
+
+        // Envoyer la réponse
+        routingContext.response()
+                .setStatusCode(200)
+                .putHeader("content-type", "application/json")
+                .end();
     }
 }
