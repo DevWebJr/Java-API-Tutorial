@@ -2,8 +2,8 @@ package Dog;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -19,27 +19,17 @@ public class Api extends AbstractVerticle{
     @Override
     public void start() throws Exception {
         LOGGER.info("Dans la fonction start...");
-        // Initialiser le routeur
-        Router router = Router.router(vertx);
-        // Implémenter l'instance Body handler
-        router.route("/api/v1/dogs*").handler(BodyHandler.create());
 
-        // Déterminer les différentes routes
-        // La route pour récupérer tous les objets
-        router.get("/api/v1/dogs")
-                .handler(this::getAllDogs);
-        // La route pour récupérer un objet selon l'id
-        router.get("/api/v1/dogs/:id")
-                .handler(this::getOneDog);
-        // La route pour ajouter un objet
-        router.post("/api/v1/dogs")
-                .handler(this::createOneDog);
-        // La route pour mettre à jour un objet
-        router.put("/api/v1/dogs/:id")
-                .handler(this::updateOneDog);
-        // La route pour supprimer un objet
-        router.delete("/api/v1/dogs/:id")
-                .handler(this::deleteOneDog);
+        // Initialiser le routeur
+        final Router router = Router.router(vertx);
+
+
+        // Définir des routes et sous-routes
+        // Instancier un objet subRouter depuis DogResource
+        final DogResource dogResource = new DogResource();
+        final Router dogSubRouter = dogResource.getSubRouter(vertx);
+        // Déterminer que chaque url commence par "/api/v1/dogs"
+        router.mountSubRouter("/api/v1/dogs", dogSubRouter);
 
         // Lancer le serveur
         vertx.createHttpServer()
@@ -105,7 +95,7 @@ public class Api extends AbstractVerticle{
         // Créer un objet
         final Dog dog = new Dog(null, name, race, age);
         final Dog createdDog = dogService.add(dog);
-        // Envyer la réponse
+        // Envoyer la réponse
         routingContext.response()
                 .setStatusCode(201)
                 .putHeader("content-type", "application/json")
@@ -147,4 +137,5 @@ public class Api extends AbstractVerticle{
                 .putHeader("content-type", "application/json")
                 .end();
     }
+
 }
